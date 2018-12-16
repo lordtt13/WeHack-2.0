@@ -22,9 +22,11 @@ from sklearn.model_selection import cross_val_score,cross_val_predict
 from xgboost import XGBRegressor
 
 from keras.models import Sequential
-from keras.layers import Dense
+from keras.layers import Dense,Bidirectional
+from keras.callbacks import ModelCheckpoint
 from keras.regularizers import l2,l1
 from keras.wrappers.scikit_learn import KerasRegressor
+from keras.layers import Dropout
 
 data = pd.read_csv("Hack_A_Thon_DataSet_Rev1.csv")
 data['quality_per_artifact'] = 1/(data["consistency in load"]*data["consistency in quality"])
@@ -39,31 +41,33 @@ from sklearn.model_selection import train_test_split
 x_train,x_test,y_train,y_test = train_test_split(x,y,test_size=0.2,random_state=42)
 x_train,x_cv,y_train,y_cv = train_test_split(x_train,y_train,test_size=0.25,random_state=42)
 
-def baseline_model():
-    model = Sequential()
-    model.add(Dense(units = 8,input_dim = 8,kernel_initializer = "glorot_uniform",activation = "relu",kernel_regularizer = l2(0.01)))
-    model.add(Dense(units = 8,kernel_initializer = "glorot_uniform",activation = "relu",kernel_regularizer = l1(0.01)))
-    model.add(Dense(units = 8,kernel_initializer = "glorot_uniform",activation = "relu",kernel_regularizer = l1(0.01)))
-    model.add(Dense(units = 8,kernel_initializer = "glorot_uniform",activation = "relu",kernel_regularizer = l1(0.01)))
-    model.add(Dense(units = 8,kernel_initializer = "glorot_uniform",activation = "relu",kernel_regularizer = l1(0.01)))
-    model.add(Dense(units = 8,kernel_initializer = "glorot_uniform",activation = "relu",kernel_regularizer = l1(0.01)))
-    model.add(Dense(units = 8,kernel_initializer = "glorot_uniform",activation = "relu",kernel_regularizer = l1(0.01)))
-    model.add(Dense(units = 1,kernel_initializer = "glorot_uniform",activation = "relu",kernel_regularizer = l1(0.01)))
-    model.compile(loss = "mean_squared_error",optimizer = "nadam")
-    return model
+sc = RobustScaler()
+x_train = sc.fit_transform(x_train)
+
+model = Sequential()
+model.add(Dense(units = 128,input_dim = 8,kernel_initializer = "glorot_uniform",activation = "relu",kernel_regularizer = l2(0.01)))
+model.add(Dense(units = 64,kernel_initializer = "glorot_uniform",activation = "relu",kernel_regularizer = l1(0.01)))
+model.add(Dense(units = 32,kernel_initializer = "glorot_uniform",activation = "relu",kernel_regularizer = l1(0.01)))
+model.add(Dense(units = 16,kernel_initializer = "glorot_uniform",activation = "relu",kernel_regularizer = l1(0.01)))
+model.add(Dense(units = 8,kernel_initializer = "glorot_uniform",activation = "relu",kernel_regularizer = l1(0.01)))
+model.add(Dense(units = 4,kernel_initializer = "glorot_uniform",activation = "relu",kernel_regularizer = l1(0.01)))
+model.add(Dense(units = 2,kernel_initializer = "glorot_uniform",activation = "relu",kernel_regularizer = l1(0.01)))
+model.add(Dense(units = 1,kernel_initializer = "glorot_uniform",activation = "relu",kernel_regularizer = l2(0.01)))
+model.compile(loss = "mean_squared_error",optimizer = "nadam")
+
+filepath = "weight-improvement-{epoch:02d}-{loss:4f}.hd5"
+checkpoint = ModelCheckpoint(filepath,monitor = "loss", verbose = 1,save_best_only = True,mode = "min")
+callbacks_list = [checkpoint]
+    
+model.fit(x_train,y_train,epochs = 100,batch_size = 1,callbacks = callbacks_list)
 
 
-estimator = KerasRegressor(build_fn = baseline_model,epochs = 50,batch_size = 50,verbose = 0)
-pip_lasso = Pipeline([('scaler',RobustScaler()),('model',estimator)])
-gbr = pip_lasso.fit(x_train,y_train)
-
-preds = np.rint(gbr.predict(x_cv))
+preds = np.rint(model.predict(sc.transform(x_test)))
 for i in range(len(preds)-1):
     if preds[i]<0:
         preds[i] = 0
 
-print(mean_squared_error(preds,y_cv))
-
+print(mean_squared_error(preds,y_test))
 
 
 

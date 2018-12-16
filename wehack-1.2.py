@@ -18,7 +18,7 @@ from sklearn.linear_model import Ridge
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_squared_error
 from sklearn.tree import DecisionTreeRegressor
-from sklearn.linear_model import Lasso,LinearRegression,Ridge
+from sklearn.linear_model import Lasso,LinearRegression,TheilSenRegressor
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.decomposition import PCA
@@ -26,6 +26,7 @@ from sklearn.grid_search import GridSearchCV
 from sklearn.feature_selection import SelectKBest
 from sklearn.metrics import r2_score
 from sklearn.neural_network import MLPRegressor,BernoulliRBM
+from mlxtend.regressor import StackingRegressor
 from xgboost import XGBRegressor
 
 
@@ -73,7 +74,7 @@ print(gbr.best_score_)
 print(gbr.best_params_)
 
 
-"""print(mean_squared_error(gbr.predict(x_test),y_test))
+print(mean_squared_error(gbr.predict(x_test),y_test))
 print(gbr.score(x_test,y_test))
 lasso = Lasso()
 ridge = TheilSenRegressor()
@@ -91,7 +92,7 @@ grid = GridSearchCV(
     refit=True
 )
 grid.fit(x_train, y_train)
-print("Best: %f using %s" % (grid.best_score_, grid.best_params_))"""
+print("Best: %f using %s" % (grid.best_score_, grid.best_params_))
 
 """def neural_net_model(X_data,input_dim):
     W_1 = tf.Variable(tf.random_uniform([input_dim,10]))

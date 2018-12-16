@@ -7,7 +7,7 @@ Created on Sun Sep  9 00:16:35 2018
 import pandas as pd
 
 
-data = pd.read_csv("C:\\Users\\Aryaman Sriram\\Documents\\WeHack_2.0-master/excel,csv,param,target sheet/Hack_A_Thon_DataSet_Rev1.csv")
+data = pd.read_csv("Hack_A_Thon_DataSet_Rev1.csv")
 
 from xgboost import XGBRegressor
 from scipy import stats
